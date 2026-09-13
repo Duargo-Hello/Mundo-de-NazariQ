@@ -1,0 +1,2305 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="./imagens/favicon.ico" type="image/x-icon">
+
+    <title>AnimeVerse Pro+ 3.0</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Firebase 8 -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        /* =========================================================
+       RESET
+    ========================================================= */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top, rgba(124, 92, 255, 0.16), transparent 35%),
+                linear-gradient(135deg, #0b0b12, #1a1a2e);
+            color: #fff;
+            padding-top: 78px;
+            transition:
+                background 0.25s ease,
+                color 0.25s ease;
+        }
+
+        body.light {
+            background:
+                radial-gradient(circle at top, rgba(124, 92, 255, 0.08), transparent 35%),
+                #f4f5f9;
+            color: #15151d;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font-family: inherit;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+        }
+
+        /* =========================================================
+       HEADER
+    ========================================================= */
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 68px;
+            z-index: 1000;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+
+            padding: 10px 14px;
+
+            background: rgba(7, 7, 12, 0.90);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        body.light header {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .logo {
+            font-family: "Cinzel", serif;
+            font-size: 21px;
+            white-space: nowrap;
+            color: #fff;
+        }
+
+        body.light .logo {
+            color: #161622;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        #userInfo {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            opacity: 0.85;
+            margin-right: 2px;
+        }
+
+        /* =========================================================
+       BOTÕES
+    ========================================================= */
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+
+            min-height: 36px;
+            padding: 8px 11px;
+
+            border-radius: 9px;
+
+            background: #7c5cff;
+            color: #fff;
+
+            font-size: 13px;
+            font-weight: 600;
+
+            transition:
+                transform 0.15s ease,
+                filter 0.15s ease,
+                background 0.15s ease;
+        }
+
+        .btn:hover {
+            filter: brightness(1.10);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn.secondary {
+            background: #3b3b4c;
+        }
+
+        .btn.danger {
+            background: #d64545;
+        }
+
+        .btn.success {
+            background: #269b68;
+        }
+
+        .btn.theme {
+            width: 38px;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        body.light .btn.secondary {
+            background: #dedee7;
+            color: #222;
+        }
+
+        /* =========================================================
+       CONTEÚDO
+    ========================================================= */
+
+        main {
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+
+        .section {
+            padding: 8px 10px 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+
+            margin: 12px 0 4px;
+
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin: 0 0 10px;
+            font-size: 12px;
+            opacity: 0.65;
+        }
+
+        /* =========================================================
+       GRID
+    ========================================================= */
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 8px 0 18px;
+        }
+
+        /* =========================================================
+       CARD
+    ========================================================= */
+
+        .card {
+            position: relative;
+
+            min-width: 0;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            overflow: hidden;
+
+            background: rgba(255, 255, 255, 0.055);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 13px;
+
+            padding: 9px;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                background 0.2s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.20);
+        }
+
+        body.light .card {
+            background: #fff;
+            color: #15151d;
+            border-color: rgba(0, 0, 0, 0.07);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .anime-image {
+            width: 100%;
+            height: 220px;
+
+            object-fit: cover;
+
+            display: block;
+
+            border-radius: 9px;
+
+            background: #242432;
+        }
+
+        .card-title {
+            width: 100%;
+
+            padding: 9px 4px 4px;
+
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+
+            word-break: break-word;
+        }
+
+        .card-desc {
+            width: 100%;
+
+            padding: 2px 4px 5px;
+
+            font-size: 11px;
+            line-height: 1.4;
+            text-align: center;
+
+            opacity: 0.65;
+
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .visibility {
+            font-size: 10px;
+            opacity: 0.65;
+            margin: 2px 0 6px;
+        }
+
+        .actions {
+            width: 100%;
+
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+
+            padding-top: 5px;
+        }
+
+        .actions .btn {
+            min-width: 42px;
+            padding: 7px 9px;
+        }
+
+        /* =========================================================
+       ESTADOS VAZIOS / LOADING
+    ========================================================= */
+
+        .state {
+            grid-column: 1 / -1;
+
+            padding: 30px 15px;
+
+            text-align: center;
+
+            border-radius: 12px;
+
+            background: rgba(255, 255, 255, 0.035);
+
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        body.light .state {
+            background: rgba(0, 0, 0, 0.035);
+        }
+
+        .spinner {
+            width: 26px;
+            height: 26px;
+
+            margin: 0 auto 10px;
+
+            border: 3px solid rgba(255, 255, 255, 0.18);
+            border-top-color: #7c5cff;
+            border-radius: 50%;
+
+            animation: spin 0.8s linear infinite;
+        }
+
+        body.light .spinner {
+            border-color: rgba(0, 0, 0, 0.12);
+            border-top-color: #7c5cff;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* =========================================================
+       MODAL
+    ========================================================= */
+
+        .modal {
+            position: fixed;
+            inset: 0;
+
+            z-index: 2000;
+
+            display: none;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 15px;
+
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 100%;
+            max-width: 430px;
+            max-height: calc(100vh - 30px);
+
+            overflow-y: auto;
+
+            padding: 18px;
+
+            border-radius: 15px;
+
+            background: #1a1a2e;
+            color: #fff;
+
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.40);
+        }
+
+        body.light .modal-box {
+            background: #fff;
+            color: #15151d;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            margin-bottom: 14px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+        }
+
+        .close-x {
+            width: 32px;
+            height: 32px;
+
+            border-radius: 8px;
+
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+
+            font-size: 17px;
+        }
+
+        body.light .close-x {
+            background: #eeeeF3;
+            color: #222;
+        }
+
+        /* =========================================================
+       FORMULÁRIO
+    ========================================================= */
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+
+            margin-bottom: 5px;
+
+            font-size: 12px;
+            font-weight: 600;
+
+            opacity: 0.8;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+
+            border: 1px solid transparent;
+            outline: none;
+
+            padding: 10px;
+
+            border-radius: 9px;
+
+            background: #29293d;
+            color: #fff;
+
+            font-size: 13px;
+
+            transition:
+                border-color 0.15s ease,
+                background 0.15s ease;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #7c5cff;
+        }
+
+        body.light input,
+        body.light textarea,
+        body.light select {
+            background: #f0f0f5;
+            color: #15151d;
+            border-color: #dddde6;
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 7px;
+            margin-top: 13px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* =========================================================
+       TOAST
+    ========================================================= */
+
+        #toast {
+            position: fixed;
+
+            left: 50%;
+            bottom: 20px;
+
+            z-index: 3000;
+
+            max-width: calc(100% - 30px);
+
+            transform: translate(-50%, 120px);
+
+            padding: 11px 15px;
+
+            border-radius: 10px;
+
+            background: #242436;
+            color: #fff;
+
+            font-size: 13px;
+            text-align: center;
+
+            opacity: 0;
+
+            pointer-events: none;
+
+            transition:
+                transform 0.25s ease,
+                opacity 0.25s ease;
+        }
+
+        #toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        #toast.error {
+            background: #b93737;
+        }
+
+        #toast.success {
+            background: #23865b;
+        }
+
+        /* =========================================================
+       TABLET
+    ========================================================= */
+
+        @media (min-width: 600px) {
+            body {
+                padding-top: 72px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+
+            .anime-image {
+                height: 245px;
+            }
+        }
+
+        /* =========================================================
+       DESKTOP
+    ========================================================= */
+
+        @media (min-width: 900px) {
+            header {
+                padding-left: 22px;
+                padding-right: 22px;
+            }
+
+            .section {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 15px;
+            }
+
+            .anime-image {
+                height: 285px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+
+        /* =========================================================
+       CELULAR PEQUENO
+    ========================================================= */
+
+        @media (max-width: 480px) {
+            header {
+                align-items: flex-start;
+            }
+
+            .logo {
+                font-size: 17px;
+                padding-top: 7px;
+            }
+
+            .header-actions {
+                gap: 4px;
+            }
+
+            #userInfo {
+                display: none;
+            }
+
+            .btn {
+                min-height: 34px;
+                padding: 7px 8px;
+                font-size: 11px;
+            }
+
+            .btn.theme {
+                width: 34px;
+            }
+
+            .grid {
+                gap: 9px;
+            }
+
+            .anime-image {
+                height: 190px;
+            }
+
+            .card-title {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================================
+       HEADER
+  ========================================================= -->
+
+    <header>
+
+        <div class="logo">
+            AnimeVerse
+        </div>
+
+        <div class="header-actions">
+
+            <span id="userInfo"></span>
+
+            <button id="loginBtn" class="btn" type="button" onclick="login()">
+                🔑 Login
+            </button>
+
+            <button id="logoutBtn" class="btn secondary" type="button" onclick="logout()" style="display:none;">
+                🚪 Sair
+            </button>
+
+            <button id="themeBtn" class="btn theme" type="button" onclick="toggleTheme()" title="Alternar tema">
+                🌙
+            </button>
+
+            <button id="adminBtn" class="btn secondary" type="button" onclick="openAdminPanel()" style="display:none;">
+                🛡️ ADM
+            </button>
+
+            <button id="addBtn" class="btn" type="button" onclick="openAdd()">
+                ＋ Anime
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================================
+       CONTEÚDO
+  ========================================================= -->
+
+    <main>
+
+        <!-- FEED PÚBLICO -->
+
+        <section class="section">
+
+            <div class="section-title">
+                <span>🌍 Feed Público</span>
+            </div>
+
+            <div class="section-subtitle">
+                Animes públicos disponíveis para todos.
+            </div>
+
+            <div id="publicList" class="grid">
+                <div class="state">
+                    <div class="spinner"></div>
+                    Carregando animes...
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- MEUS ANIMES -->
+
+        <section class="section">
+
+            <div class="section-title">
+                <span>🔒 Meus Animes</span>
+            </div>
+
+            <div class="section-subtitle">
+                Seus animes públicos e privados.
+            </div>
+
+            <div id="myList" class="grid">
+
+                <div class="state">
+                    Faça login para visualizar seus animes.
+                </div>
+
+            </div>
+
+        </section>
+
+        <section id="adminSection" class="section" style="display:none;">
+
+            <div class="section-title">
+                <span>🛡️ Moderação</span>
+            </div>
+
+            <div class="section-subtitle">
+                Postagens pendentes aguardando aprovação.
+            </div>
+
+            <div id="adminList" class="grid">
+                <div class="state">
+                    Nenhuma postagem pendente.
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================================
+       MODAL
+  ========================================================= -->
+
+    <div class="modal" id="addModal" onclick="handleModalBackground(event)">
+
+        <div class="modal-box" onclick="event.stopPropagation()">
+
+            <div class="modal-header">
+
+                <h3 id="modalTitle">
+                    Novo Anime
+                </h3>
+
+                <button class="close-x" type="button" onclick="closeAdd()" aria-label="Fechar">
+                    ×
+                </button>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="title">
+                    Título
+                </label>
+
+                <input id="title" type="text" placeholder="Ex.: Naruto" maxlength="120" autocomplete="off">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="img">
+                    URL da imagem
+                </label>
+
+                <input id="img" type="url" placeholder="https://..." maxlength="1000" autocomplete="off">
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="desc">
+                    Descrição
+                </label>
+
+                <textarea id="desc" placeholder="Descrição do anime..." maxlength="1000"></textarea>
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="visibility">
+                    Visibilidade
+                </label>
+
+                <select id="visibility">
+
+                    <option value="public">
+                        🌍 Público
+                    </option>
+
+                    <option value="private">
+                        🔒 Privado
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div class="modal-actions">
+
+                <button id="saveBtn" class="btn success" type="button" onclick="saveAnime()">
+                    💾 Salvar
+                </button>
+
+                <button class="btn secondary" type="button" onclick="closeAdd()">
+                    Fechar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- TOAST -->
+
+    <div id="toast"></div>
+
+
+    <script>
+
+        /* =========================================================
+           FIREBASE
+        ========================================================= */
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQXs6kg_p9ljGa9wEBrsbJn8eR1xF4hoQ",
+            authDomain: "mundo-de-nazarick.firebaseapp.com",
+            projectId: "mundo-de-nazarick"
+        };
+
+        const ADMIN_EMAILS = [
+            "altezki@gmail.com"
+        ];
+
+        const ADMIN_UIDS = [
+            ""
+        ];
+
+        function isAdmin() {
+
+            if (!currentUser) {
+                return false;
+            }
+
+            const email = currentUser.email ? currentUser.email.toLowerCase() : "";
+            const uid = currentUser.uid || "";
+
+            return ADMIN_UIDS.includes(uid) || ADMIN_EMAILS.includes(email);
+        }
+
+        firebase.initializeApp(firebaseConfig);
+
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+
+        /* =========================================================
+           ELEMENTOS
+        ========================================================= */
+
+        const userInfo = document.getElementById("userInfo");
+
+        const publicList = document.getElementById("publicList");
+        const myList = document.getElementById("myList");
+
+        const addModal = document.getElementById("addModal");
+
+        const modalTitle = document.getElementById("modalTitle");
+
+        const titleInput = document.getElementById("title");
+        const imgInput = document.getElementById("img");
+        const descInput = document.getElementById("desc");
+        const visibilityInput = document.getElementById("visibility");
+
+        const saveBtn = document.getElementById("saveBtn");
+
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const addBtn = document.getElementById("addBtn");
+        const adminBtn = document.getElementById("adminBtn");
+        const themeBtn = document.getElementById("themeBtn");
+        const adminSection = document.getElementById("adminSection");
+        const adminList = document.getElementById("adminList");
+
+        const toast = document.getElementById("toast");
+
+
+        /* =========================================================
+           ESTADO DA APLICAÇÃO
+        ========================================================= */
+
+        let allAnimes = [];
+
+        let editingId = null;
+
+        let currentUser = null;
+
+        let unsubscribeAnimes = null;
+
+        let toastTimer = null;
+
+
+        /* =========================================================
+           TEMA
+        ========================================================= */
+
+        function loadTheme() {
+
+            const savedTheme = localStorage.getItem("animeverse_theme");
+
+            if (savedTheme === "light") {
+
+                document.body.classList.add("light");
+
+                themeBtn.innerText = "☀️";
+
+            } else {
+
+                document.body.classList.remove("light");
+
+                themeBtn.innerText = "🌙";
+
+            }
+
+        }
+
+
+        function toggleTheme() {
+
+            const isLight = document.body.classList.toggle("light");
+
+            localStorage.setItem(
+                "animeverse_theme",
+                isLight ? "light" : "dark"
+            );
+
+            themeBtn.innerText = isLight ? "☀️" : "🌙";
+        }
+
+
+        /* =========================================================
+           TOAST
+        ========================================================= */
+
+        function showToast(message, type = "") {
+
+            clearTimeout(toastTimer);
+
+            toast.innerText = message;
+
+            toast.className = "";
+
+            toast.classList.add("show");
+
+            if (type) {
+                toast.classList.add(type);
+            }
+
+            toastTimer = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3500);
+        }
+
+
+        /* =========================================================
+           AUTH
+        ========================================================= */
+
+        function login() {
+
+            const provider =
+                new firebase.auth.GoogleAuthProvider();
+
+            provider.setCustomParameters({
+                prompt: "select_account"
+            });
+
+            auth.signInWithPopup(provider)
+                .then(() => {
+
+                    showToast(
+                        "Login realizado com sucesso!",
+                        "success"
+                    );
+
+                })
+                .catch(error => {
+
+                    console.error("Erro no login:", error);
+
+                    showToast(
+                        getFirebaseError(error),
+                        "error"
+                    );
+
+                });
+        }
+
+
+        function logout() {
+
+            auth.signOut()
+                .then(() => {
+
+                    showToast(
+                        "Você saiu da sua conta.",
+                        "success"
+                    );
+
+                })
+                .catch(error => {
+
+                    console.error("Erro ao sair:", error);
+
+                    showToast(
+                        getFirebaseError(error),
+                        "error"
+                    );
+
+                });
+        }
+
+
+        /* =========================================================
+           ESTADO DE AUTENTICAÇÃO
+        ========================================================= */
+
+        auth.onAuthStateChanged(user => {
+
+            currentUser = user || null;
+
+            updateHeader();
+
+            render();
+
+        });
+
+
+        function updateHeader() {
+
+            const isUserAdmin = isAdmin();
+
+            if (currentUser) {
+
+                userInfo.innerText =
+                    currentUser.displayName ||
+                    currentUser.email ||
+                    "";
+
+                loginBtn.style.display = "none";
+
+                logoutBtn.style.display = "inline-flex";
+
+                addBtn.style.display = "inline-flex";
+
+                adminBtn.style.display = isUserAdmin ? "inline-flex" : "none";
+
+            } else {
+
+                userInfo.innerText = "";
+
+                loginBtn.style.display = "inline-flex";
+
+                logoutBtn.style.display = "none";
+
+                addBtn.style.display = "inline-flex";
+
+                adminBtn.style.display = "none";
+
+            }
+        }
+
+
+        /* =========================================================
+           MODAL
+        ========================================================= */
+
+        function openAdd() {
+
+            if (!currentUser) {
+
+                showToast(
+                    "Faça login para cadastrar um anime.",
+                    "error"
+                );
+
+                login();
+
+                return;
+            }
+
+            editingId = null;
+
+            modalTitle.innerText = "Novo Anime";
+
+            saveBtn.innerText = "💾 Salvar";
+
+            clearForm();
+
+            addModal.classList.add("show");
+
+            setTimeout(() => {
+                titleInput.focus();
+            }, 100);
+        }
+
+
+        function closeAdd() {
+
+            addModal.classList.remove("show");
+
+            editingId = null;
+
+            clearForm();
+        }
+
+
+        function handleModalBackground(event) {
+
+            if (event.target === addModal) {
+                closeAdd();
+            }
+        }
+
+
+        function clearForm() {
+
+            titleInput.value = "";
+
+            imgInput.value = "";
+
+            descInput.value = "";
+
+            visibilityInput.value = "public";
+        }
+
+
+        /* =========================================================
+           SALVAR / EDITAR
+        ========================================================= */
+
+        async function saveAnime() {
+
+            if (!currentUser) {
+
+                showToast(
+                    "Faça login antes de salvar.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            const title = titleInput.value.trim();
+
+            const img = imgInput.value.trim();
+
+            const desc = descInput.value.trim();
+
+            const visibility = visibilityInput.value;
+
+            const userIsAdmin = isAdmin();
+
+
+            /* VALIDAÇÕES */
+
+            if (!title) {
+
+                showToast(
+                    "Informe o título do anime.",
+                    "error"
+                );
+
+                titleInput.focus();
+
+                return;
+            }
+
+
+            if (!img) {
+
+                showToast(
+                    "Informe a URL da imagem.",
+                    "error"
+                );
+
+                imgInput.focus();
+
+                return;
+            }
+
+
+            if (
+                visibility !== "public" &&
+                visibility !== "private"
+            ) {
+
+                showToast(
+                    "Visibilidade inválida.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            /* URL */
+
+            try {
+
+                new URL(img);
+
+            } catch (error) {
+
+                showToast(
+                    "Informe uma URL de imagem válida.",
+                    "error"
+                );
+
+                imgInput.focus();
+
+                return;
+            }
+
+
+            saveBtn.disabled = true;
+
+            saveBtn.innerText = "Salvando...";
+
+
+            try {
+
+                const data = {
+                    title: title,
+                    img: img,
+                    desc: desc,
+                    visibility: visibility,
+                    status: userIsAdmin
+                        ? "approved"
+                        : (visibility === "public" ? "pending" : "approved"),
+                    moderatedBy: null,
+                    moderatedAt: null
+                };
+
+
+                /* =====================================================
+                   EDIÇÃO
+                ===================================================== */
+
+                if (editingId) {
+
+                    const animeRef =
+                        db.collection("animes").doc(editingId);
+
+                    const animeSnap =
+                        await animeRef.get();
+
+
+                    if (!animeSnap.exists) {
+
+                        throw new Error(
+                            "Anime não encontrado."
+                        );
+                    }
+
+
+                    const animeData = animeSnap.data();
+
+
+                    /* Só o dono pode editar */
+
+                    if (animeData.userId !== currentUser.uid && !userIsAdmin) {
+
+                        throw new Error(
+                            "Você não pode editar este anime."
+                        );
+                    }
+
+
+                    await animeRef.update({
+                        ...data,
+                        updatedAt:
+                            firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+
+                    showToast(
+                        "Anime atualizado com sucesso!",
+                        "success"
+                    );
+
+                }
+
+                /* =====================================================
+                   NOVO ANIME
+                ===================================================== */
+
+                else {
+
+                    await db.collection("animes").add({
+
+                        ...data,
+
+                        userId: currentUser.uid,
+
+                        createdAt:
+                            firebase.firestore.FieldValue.serverTimestamp(),
+
+                        updatedAt:
+                            firebase.firestore.FieldValue.serverTimestamp()
+
+                    });
+
+
+                    showToast(
+                        userIsAdmin
+                            ? "Anime cadastrado com sucesso!"
+                            : (visibility === "public"
+                                ? "Sua postagem foi enviada para aprovação do administrador."
+                                : "Anime salvo como privado com sucesso."),
+                        "success"
+                    );
+                }
+
+
+                closeAdd();
+
+            } catch (error) {
+
+                console.error(
+                    "Erro ao salvar anime:",
+                    error
+                );
+
+                showToast(
+                    getFirebaseError(error),
+                    "error"
+                );
+
+            } finally {
+
+                saveBtn.disabled = false;
+
+                saveBtn.innerText =
+                    editingId
+                        ? "💾 Salvar alterações"
+                        : "💾 Salvar";
+            }
+        }
+
+
+        /* =========================================================
+           EDITAR ANIME
+        ========================================================= */
+
+        async function editAnime(id) {
+
+            if (!currentUser) {
+
+                showToast(
+                    "Faça login para editar.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            try {
+
+                const animeRef =
+                    db.collection("animes").doc(id);
+
+                const snap =
+                    await animeRef.get();
+
+
+                if (!snap.exists) {
+
+                    showToast(
+                        "Anime não encontrado.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                const anime = snap.data();
+
+
+                if (anime.userId !== currentUser.uid && !isAdmin()) {
+
+                    showToast(
+                        "Você não pode editar este anime.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                titleInput.value =
+                    anime.title || "";
+
+                imgInput.value =
+                    anime.img || "";
+
+                descInput.value =
+                    anime.desc || "";
+
+                visibilityInput.value =
+                    anime.visibility === "private"
+                        ? "private"
+                        : "public";
+
+
+                editingId = id;
+
+                modalTitle.innerText =
+                    "Editar Anime";
+
+                saveBtn.innerText =
+                    "💾 Salvar alterações";
+
+
+                addModal.classList.add("show");
+
+
+                setTimeout(() => {
+                    titleInput.focus();
+                }, 100);
+
+            } catch (error) {
+
+                console.error(
+                    "Erro ao carregar anime:",
+                    error
+                );
+
+                showToast(
+                    getFirebaseError(error),
+                    "error"
+                );
+            }
+        }
+
+
+        /* =========================================================
+           EXCLUIR ANIME
+        ========================================================= */
+
+        async function delAnime(id) {
+
+            if (!currentUser) {
+
+                showToast(
+                    "Faça login para excluir.",
+                    "error"
+                );
+
+                return;
+            }
+
+
+            const confirmed =
+                confirm(
+                    "Tem certeza que deseja excluir este anime?"
+                );
+
+
+            if (!confirmed) {
+                return;
+            }
+
+
+            try {
+
+                const animeRef =
+                    db.collection("animes").doc(id);
+
+                const snap =
+                    await animeRef.get();
+
+
+                if (!snap.exists) {
+
+                    showToast(
+                        "Anime já não existe.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                const anime =
+                    snap.data();
+
+
+                /* Só o dono pode excluir */
+
+                if (anime.userId !== currentUser.uid && !isAdmin()) {
+
+                    showToast(
+                        "Você não pode excluir este anime.",
+                        "error"
+                    );
+
+                    return;
+                }
+
+
+                await animeRef.delete();
+
+
+                showToast(
+                    "Anime excluído com sucesso!",
+                    "success"
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Erro ao excluir:",
+                    error
+                );
+
+                showToast(
+                    getFirebaseError(error),
+                    "error"
+                );
+            }
+        }
+
+        async function moderateAnime(id, newStatus) {
+
+            if (!isAdmin()) {
+                showToast("Acesso restrito ao administrador.", "error");
+                return;
+            }
+
+            try {
+
+                const animeRef = db.collection("animes").doc(id);
+                const animeSnap = await animeRef.get();
+
+                if (!animeSnap.exists) {
+                    showToast("Postagem não encontrada.", "error");
+                    return;
+                }
+
+                const animeData = animeSnap.data();
+
+                await animeRef.update({
+                    status: newStatus,
+                    moderatedBy: currentUser.uid,
+                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    visibility: newStatus === "approved"
+                        ? animeData.visibility
+                        : "private",
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast(
+                    newStatus === "approved"
+                        ? "Postagem aprovada com sucesso!"
+                        : "Postagem rejeitada.",
+                    "success"
+                );
+
+            } catch (error) {
+                console.error("Erro ao moderar postagem:", error);
+                showToast(getFirebaseError(error), "error");
+            }
+        }
+
+
+        /* =========================================================
+           CARREGAR ANIMES
+ 
+           Não usamos apenas:
+ 
+           orderBy("createdAt")
+ 
+           porque documentos antigos podem não ter
+           esse campo e deixar de aparecer.
+        ========================================================= */
+
+        function startAnimeListener() {
+
+            if (unsubscribeAnimes) {
+
+                unsubscribeAnimes();
+
+                unsubscribeAnimes = null;
+            }
+
+
+            showLoading();
+
+
+            unsubscribeAnimes =
+                db.collection("animes")
+                    .onSnapshot(
+
+                        snapshot => {
+
+                            allAnimes =
+                                snapshot.docs.map(doc => {
+
+                                    return {
+                                        id: doc.id,
+                                        data: doc.data()
+                                    };
+
+                                });
+
+
+                            /* Ordenação no JavaScript.
+                               Funciona também para documentos
+                               antigos sem createdAt. */
+
+                            allAnimes.sort((a, b) => {
+
+                                const aDate =
+                                    getTimestamp(a.data.createdAt);
+
+                                const bDate =
+                                    getTimestamp(b.data.createdAt);
+
+                                return bDate - aDate;
+
+                            });
+
+
+                            render();
+
+                        },
+
+                        error => {
+
+                            console.error(
+                                "Erro no Firestore:",
+                                error
+                            );
+
+                            publicList.innerHTML = `
+                <div class="state">
+                  ❌ Não foi possível carregar o Feed Público.
+                  <br><br>
+                  ${escapeHtml(
+                                getFirebaseError(error)
+                            )}
+                </div>
+              `;
+
+
+                            myList.innerHTML = `
+                <div class="state">
+                  ❌ Não foi possível carregar seus animes.
+                </div>
+              `;
+                        }
+                    );
+        }
+
+
+        /* =========================================================
+           RENDER
+        ========================================================= */
+
+        function render() {
+
+            publicList.innerHTML = "";
+
+            myList.innerHTML = "";
+
+            adminSection.style.display = "none";
+
+
+            /* =======================================================
+               FEED PÚBLICO
+            ======================================================= */
+
+            const publicAnimes =
+                allAnimes.filter(item => {
+
+                    return item.data.status !== "pending" && item.data.visibility === "public";
+
+                });
+
+
+            if (publicAnimes.length === 0) {
+
+                publicList.innerHTML = `
+          <div class="state">
+            🌍 Nenhum anime público cadastrado.
+          </div>
+        `;
+
+            } else {
+
+                publicAnimes.forEach(item => {
+
+                    publicList.appendChild(
+                        createCard(item)
+                    );
+
+                });
+
+            }
+
+
+            /* =======================================================
+               MEUS ANIMES
+            ======================================================= */
+
+            if (!currentUser) {
+
+                myList.innerHTML = `
+          <div class="state">
+            🔒 Faça login para visualizar seus animes.
+          </div>
+        `;
+
+                renderAdminPanel();
+                return;
+            }
+
+
+            const myAnimes =
+                allAnimes.filter(item => {
+
+                    return (
+                        item.data.userId ===
+                        currentUser.uid
+                    );
+
+                });
+
+
+            if (myAnimes.length === 0) {
+
+                myList.innerHTML = `
+          <div class="state">
+            📚 Você ainda não cadastrou nenhum anime.
+            <br><br>
+            Clique em <strong>＋ Anime</strong> para adicionar.
+          </div>
+        `;
+
+            } else {
+
+                myAnimes.forEach(item => {
+
+                    myList.appendChild(
+                        createCard(item)
+                    );
+
+                });
+
+            }
+
+            renderAdminPanel();
+        }
+
+        function renderAdminPanel() {
+
+            if (!isAdmin()) {
+                adminList.innerHTML = "";
+                return;
+            }
+
+            const pendingAnimes = allAnimes.filter(item =>
+                item.data.status === "pending" && item.data.visibility === "public"
+            );
+
+            if (pendingAnimes.length === 0) {
+                adminList.innerHTML = `
+                    <div class="state">
+                        ✅ Nenhuma postagem pendente.
+                    </div>
+                `;
+                return;
+            }
+
+            adminList.innerHTML = "";
+
+            pendingAnimes.forEach(item => {
+                adminList.appendChild(createModerationCard(item));
+            });
+        }
+
+        function createModerationCard(item) {
+
+            const card = document.createElement("div");
+            card.className = "card";
+
+            const image = document.createElement("img");
+            image.className = "anime-image";
+            image.src = item.data.img || getPlaceholder();
+            image.alt = item.data.title || "Anime pendente";
+            image.loading = "lazy";
+
+            const title = document.createElement("p");
+            title.className = "card-title";
+            title.innerText = item.data.title || "Sem título";
+
+            const status = document.createElement("small");
+            status.className = "visibility";
+            status.innerText = "⏳ Pendente de aprovação";
+
+            const userName = document.createElement("small");
+            userName.className = "visibility";
+            userName.innerText = "Usuário: " + (item.data.userId || "desconhecido");
+
+            const actions = document.createElement("div");
+            actions.className = "actions";
+
+            const approveBtn = document.createElement("button");
+            approveBtn.className = "btn success";
+            approveBtn.type = "button";
+            approveBtn.innerText = "Aprovar";
+            approveBtn.addEventListener("click", () => moderateAnime(item.id, "approved"));
+
+            const rejectBtn = document.createElement("button");
+            rejectBtn.className = "btn danger";
+            rejectBtn.type = "button";
+            rejectBtn.innerText = "Rejeitar";
+            rejectBtn.addEventListener("click", () => moderateAnime(item.id, "rejected"));
+
+            actions.appendChild(approveBtn);
+            actions.appendChild(rejectBtn);
+
+            card.appendChild(image);
+            card.appendChild(title);
+            card.appendChild(status);
+            card.appendChild(userName);
+            card.appendChild(actions);
+
+            return card;
+        }
+
+
+        /* =========================================================
+           CARD
+        ========================================================= */
+
+        function createCard(item) {
+
+            const id = item.id;
+
+            const d = item.data;
+
+            const isUserAdmin = isAdmin();
+
+
+            const card =
+                document.createElement("div");
+
+            card.className = "card";
+
+
+            /* -------------------------------------------------------
+               Imagem
+            ------------------------------------------------------- */
+
+            const image =
+                document.createElement("img");
+
+            image.className =
+                "anime-image";
+
+            image.alt =
+                d.title || "Anime";
+
+            image.loading =
+                "lazy";
+
+
+            image.src =
+                d.img || getPlaceholder();
+
+
+            image.onerror = function () {
+
+                this.onerror = null;
+
+                this.src = getPlaceholder();
+
+            };
+
+
+            /* -------------------------------------------------------
+               Título
+            ------------------------------------------------------- */
+
+            const title =
+                document.createElement("p");
+
+            title.className =
+                "card-title";
+
+            title.innerText =
+                d.title || "Sem título";
+
+
+            /* -------------------------------------------------------
+               Descrição
+            ------------------------------------------------------- */
+
+            const desc =
+                document.createElement("p");
+
+            desc.className =
+                "card-desc";
+
+            desc.innerText =
+                d.desc || "Sem descrição";
+
+
+            /* -------------------------------------------------------
+               Visibilidade
+            ------------------------------------------------------- */
+
+            const visibility =
+                document.createElement("small");
+
+            visibility.className =
+                "visibility";
+
+            visibility.innerText =
+                d.visibility === "private"
+                    ? "🔒 Privado"
+                    : "🌍 Público";
+
+
+            card.appendChild(image);
+
+            card.appendChild(title);
+
+            if (d.desc) {
+                card.appendChild(desc);
+            }
+
+            card.appendChild(visibility);
+
+
+            /* -------------------------------------------------------
+               AÇÕES
+ 
+               Somente o proprietário vê os botões.
+            ------------------------------------------------------- */
+
+            const isOwner =
+                currentUser &&
+                d.userId === currentUser.uid;
+
+
+            if (isOwner || isUserAdmin) {
+
+                const actions =
+                    document.createElement("div");
+
+                actions.className =
+                    "actions";
+
+
+                const editButton =
+                    document.createElement("button");
+
+                editButton.className =
+                    "btn";
+
+                editButton.type =
+                    "button";
+
+                editButton.innerText =
+                    "✏️";
+
+                editButton.title =
+                    "Editar";
+
+
+                editButton.addEventListener(
+                    "click",
+                    event => {
+
+                        event.stopPropagation();
+
+                        editAnime(id);
+
+                    }
+                );
+
+
+                const deleteButton =
+                    document.createElement("button");
+
+                deleteButton.className =
+                    "btn danger";
+
+                deleteButton.type =
+                    "button";
+
+                deleteButton.innerText =
+                    "🗑️";
+
+                deleteButton.title =
+                    "Excluir";
+
+
+                deleteButton.addEventListener(
+                    "click",
+                    event => {
+
+                        event.stopPropagation();
+
+                        delAnime(id);
+
+                    }
+                );
+
+
+                actions.appendChild(editButton);
+
+                actions.appendChild(deleteButton);
+
+                card.appendChild(actions);
+            }
+
+
+            return card;
+        }
+
+
+        /* =========================================================
+           LOADING
+        ========================================================= */
+
+        function showLoading() {
+
+            publicList.innerHTML = `
+        <div class="state">
+          <div class="spinner"></div>
+          Carregando Feed Público...
+        </div>
+      `;
+
+
+            myList.innerHTML = `
+        <div class="state">
+          <div class="spinner"></div>
+          Carregando seus animes...
+        </div>
+      `;
+        }
+
+
+        /* =========================================================
+           PLACEHOLDER
+        ========================================================= */
+
+        function getPlaceholder() {
+
+            return "https://via.placeholder.com/400x550?text=Anime";
+        }
+
+
+        /* =========================================================
+           TIMESTAMP
+        ========================================================= */
+
+        function getTimestamp(value) {
+
+            if (!value) {
+                return 0;
+            }
+
+
+            /* Timestamp Firebase */
+
+            if (
+                typeof value.toMillis === "function"
+            ) {
+
+                return value.toMillis();
+            }
+
+
+            /* Date */
+
+            if (value instanceof Date) {
+
+                return value.getTime();
+            }
+
+
+            /* Timestamp convertido */
+
+            if (
+                typeof value.seconds === "number"
+            ) {
+
+                return value.seconds * 1000;
+            }
+
+
+            return 0;
+        }
+
+
+        /* =========================================================
+           ERROS FIREBASE
+        ========================================================= */
+
+        function getFirebaseError(error) {
+
+            if (!error) {
+                return "Ocorreu um erro inesperado.";
+            }
+
+
+            const code =
+                error.code || "";
+
+
+            const messages = {
+
+                "auth/popup-closed-by-user":
+                    "A janela de login foi fechada.",
+
+                "auth/popup-blocked":
+                    "O navegador bloqueou a janela de login. Permita pop-ups para este site.",
+
+                "auth/cancelled-popup-request":
+                    "Outra janela de login já está aberta.",
+
+                "auth/network-request-failed":
+                    "Erro de conexão. Verifique sua internet.",
+
+                "permission-denied":
+                    "Permissão negada pelo Firebase.",
+
+                "failed-precondition":
+                    "O Firebase informou que uma condição necessária não foi atendida.",
+
+                "unavailable":
+                    "O serviço do Firebase está temporariamente indisponível.",
+
+                "unauthenticated":
+                    "Faça login para realizar esta ação."
+
+            };
+
+
+            if (messages[code]) {
+
+                return messages[code];
+            }
+
+
+            if (error.message) {
+
+                return error.message;
+            }
+
+
+            return "Ocorreu um erro inesperado.";
+        }
+
+
+        /* =========================================================
+           ESCAPE HTML
+ 
+           Usado para mensagens vindas de erros.
+        ========================================================= */
+
+        function escapeHtml(value) {
+
+            const div =
+                document.createElement("div");
+
+            div.innerText =
+                String(value || "");
+
+            return div.innerHTML;
+        }
+
+
+        /* =========================================================
+           TECLADO
+        ========================================================= */
+
+        document.addEventListener(
+            "keydown",
+            event => {
+
+                if (event.key === "Escape") {
+
+                    closeAdd();
+
+                }
+
+            }
+        );
+
+
+        function openAdminPanel() {
+            if (!isAdmin()) {
+                showToast("Acesso restrito ao administrador.", "error");
+                return;
+            }
+
+            window.location.href = "admin.html";
+        }
+
+        /* =========================================================
+           INICIALIZAÇÃO
+        ========================================================= */
+
+        loadTheme();
+
+        updateHeader();
+
+        startAnimeListener();
+
+    </script>
+
+</body>
+
+</html>

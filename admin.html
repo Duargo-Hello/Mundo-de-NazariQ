@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnimeVerse Admin</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, rgba(124, 92, 255, 0.16), transparent 35%),
+                linear-gradient(135deg, #0b0b12, #1a1a2e);
+            color: #fff;
+            padding-top: 78px;
+            transition: background 0.25s ease, color 0.25s ease;
+        }
+
+        body.light {
+            background: radial-gradient(circle at top, rgba(124, 92, 255, 0.08), transparent 35%), #f4f5f9;
+            color: #15151d;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 68px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 10px 14px;
+            background: rgba(7, 7, 12, 0.90);
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        body.light header {
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .logo {
+            font-family: "Cinzel", serif;
+            font-size: 21px;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        body.light .logo {
+            color: #161622;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        #userInfo {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            opacity: 0.85;
+            margin-right: 2px;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+            font-family: inherit;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            min-height: 36px;
+            padding: 8px 11px;
+            border-radius: 9px;
+            background: #7c5cff;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            transition: transform 0.15s ease, filter 0.15s ease, background 0.15s ease;
+        }
+
+        .btn:hover {
+            filter: brightness(1.10);
+        }
+
+        .btn:active {
+            transform: scale(0.96);
+        }
+
+        .btn.secondary {
+            background: #3b3b4c;
+        }
+
+        .btn.danger {
+            background: #d64545;
+        }
+
+        .btn.success {
+            background: #269b68;
+        }
+
+        .btn.theme {
+            width: 38px;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        body.light .btn.secondary {
+            background: #dedee7;
+            color: #222;
+        }
+
+        main {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 10px 40px;
+        }
+
+        .section {
+            padding: 8px 0 0;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 12px 0 4px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            margin: 0 0 10px;
+            font-size: 12px;
+            opacity: 0.65;
+        }
+
+        .state {
+            padding: 28px 16px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.035);
+            font-size: 13px;
+            opacity: 0.75;
+            text-align: center;
+        }
+
+        body.light .state {
+            background: rgba(0, 0, 0, 0.035);
+        }
+
+        .page-header {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .summary-bar {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(110px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .summary-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-height: 72px;
+        }
+
+        body.light .summary-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.06);
+        }
+
+        .summary-label {
+            font-size: 11px;
+            opacity: 0.72;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .summary-value {
+            margin-top: 8px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 10px 0 14px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 7px 9px;
+        }
+
+        .filter-wrap label {
+            font-size: 12px;
+            opacity: 0.75;
+        }
+
+        .filter-select {
+            min-width: 150px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #fff;
+            padding: 8px 10px;
+            font-size: 13px;
+        }
+
+        body.light .filter-select {
+            background: #f0f0f5;
+            color: #15151d;
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            padding: 8px 0 18px;
+        }
+
+        @media (min-width: 600px) {
+            .grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (min-width: 900px) {
+            .grid {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 15px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .grid {
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+            }
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.055);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 13px;
+            padding: 10px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+
+        .card-select {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 7px;
+            padding: 0 4px 8px;
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .card-select input {
+            width: 15px;
+            height: 15px;
+            accent-color: #7c5cff;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.20);
+        }
+
+        body.light .card {
+            background: #fff;
+            color: #15151d;
+            border-color: rgba(0, 0, 0, 0.07);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .anime-image {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            display: block;
+            border-radius: 9px;
+            background: #242432;
+        }
+
+        .card-title {
+            width: 100%;
+            padding: 8px 4px 4px;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .card-desc {
+            width: 100%;
+            padding: 2px 4px 5px;
+            font-size: 11px;
+            line-height: 1.4;
+            text-align: center;
+            opacity: 0.65;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .visibility {
+            font-size: 10px;
+            opacity: 0.65;
+            margin: 2px 0 6px;
+            display: inline-block;
+            width: auto;
+            padding: 4px 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .user-pill {
+            font-size: 10px;
+            opacity: 0.7;
+            margin: 2px 0 6px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .detail-btn {
+            background: #3b3b4c;
+            flex: 1;
+        }
+
+        body.light .detail-btn {
+            background: #e8e9f2;
+            color: #222;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-box {
+            width: 100%;
+            max-width: 480px;
+            max-height: calc(100vh - 30px);
+            overflow-y: auto;
+            padding: 18px;
+            border-radius: 15px;
+            background: #1a1a2e;
+            color: #fff;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.40);
+        }
+
+        body.light .modal-box {
+            background: #fff;
+            color: #15151d;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+        }
+
+        .close-x {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-size: 17px;
+        }
+
+        body.light .close-x {
+            background: #eeeeF3;
+            color: #222;
+        }
+
+        .detail-body {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-meta {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .detail-desc {
+            font-size: 13px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .actions {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 6px;
+            padding-top: 5px;
+            flex-wrap: wrap;
+        }
+
+        .actions .btn {
+            min-width: 42px;
+            padding: 7px 9px;
+            flex: 1 1 90px;
+        }
+
+        #toast {
+            position: fixed;
+            left: 50%;
+            bottom: 20px;
+            z-index: 3000;
+            max-width: calc(100% - 30px);
+            transform: translate(-50%, 120px);
+            padding: 11px 15px;
+            border-radius: 10px;
+            background: #242436;
+            color: #fff;
+            font-size: 13px;
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+
+        #toast.show {
+            transform: translate(-50%, 0);
+            opacity: 1;
+        }
+
+        #toast.error {
+            background: #b93737;
+        }
+
+        #toast.success {
+            background: #23865b;
+        }
+
+        @media (max-width: 480px) {
+            header {
+                align-items: flex-start;
+            }
+
+            .logo {
+                font-size: 17px;
+                padding-top: 7px;
+            }
+
+            #userInfo {
+                display: none;
+            }
+
+            .summary-bar {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-wrap {
+                width: 100%;
+                justify-content: space-between;
+                margin-left: 0;
+            }
+
+            .btn {
+                min-height: 34px;
+                padding: 7px 8px;
+                font-size: 11px;
+            }
+
+            .btn.theme {
+                width: 34px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="logo">AnimeVerse</div>
+
+        <div class="header-actions">
+            <span id="userInfo"></span>
+
+            <button id="homeBtn" class="btn secondary" type="button" onclick="goHome()">
+                🏠 Site
+            </button>
+
+            <button id="loginBtn" class="btn" type="button" onclick="login()">
+                🔑 Login
+            </button>
+
+            <button id="logoutBtn" class="btn secondary" type="button" onclick="logout()" style="display:none;">
+                🚪 Sair
+            </button>
+
+            <button id="themeBtn" class="btn theme" type="button" onclick="toggleTheme()" title="Alternar tema">
+                🌙
+            </button>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="page-header">
+                <div>
+                    <div class="section-title">
+                        <span>🛡️ Painel Administrativo</span>
+                    </div>
+                    <div class="section-subtitle">
+                        Acompanhe e modere as postagens do sistema.
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-bar">
+                <div class="summary-card">
+                    <div class="summary-label">Pendentes</div>
+                    <div id="pendingCount" class="summary-value">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Aprovados</div>
+                    <div id="approvedCount" class="summary-value">0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Lixeira</div>
+                    <div id="rejectedCount" class="summary-value">0</div>
+                </div>
+            </div>
+
+            <div class="toolbar">
+                <div class="section-subtitle" style="margin: 0;">Gestão de animes</div>
+
+                <div class="toolbar-actions">
+                    <button id="deleteSelectedBtn" class="btn danger" type="button" style="display:none;">
+                        Excluir selecionados
+                    </button>
+
+                    <button id="clearTrashBtn" class="btn danger" type="button" style="display:none;">
+                        Excluir tudo
+                    </button>
+
+                    <div class="filter-wrap">
+                        <label for="statusFilter">Filtrar:</label>
+                        <select id="statusFilter" class="filter-select">
+                            <option value="all">Todos</option>
+                            <option value="pending">Pendentes</option>
+                            <option value="approved">Aprovados</option>
+                            <option value="rejected">Lixeira</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="adminList" class="grid">
+                <div class="state">Carregando pendências...</div>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal" id="detailModal" onclick="handleModalBackground(event)">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="detailTitle">Detalhes</h3>
+                <button class="close-x" type="button" onclick="closeDetailModal()" aria-label="Fechar">
+                    ×
+                </button>
+            </div>
+
+            <div class="detail-body">
+                <div id="detailMeta" class="detail-meta"></div>
+                <div id="detailStatus" class="visibility"></div>
+                <div id="detailDesc" class="detail-desc"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQXs6kg_p9ljGa9wEBrsbJn8eR1xF4hoQ",
+            authDomain: "mundo-de-nazarick.firebaseapp.com",
+            projectId: "mundo-de-nazarick"
+        };
+
+        const ADMIN_EMAILS = ["altezki@gmail.com"];
+        const ADMIN_UIDS = [""];
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const userInfo = document.getElementById("userInfo");
+        const loginBtn = document.getElementById("loginBtn");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const themeBtn = document.getElementById("themeBtn");
+        const adminList = document.getElementById("adminList");
+        const statusFilter = document.getElementById("statusFilter");
+        const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+        const clearTrashBtn = document.getElementById("clearTrashBtn");
+        const pendingCount = document.getElementById("pendingCount");
+        const approvedCount = document.getElementById("approvedCount");
+        const rejectedCount = document.getElementById("rejectedCount");
+        const toast = document.getElementById("toast");
+        const detailModal = document.getElementById("detailModal");
+        const detailTitle = document.getElementById("detailTitle");
+        const detailMeta = document.getElementById("detailMeta");
+        const detailStatus = document.getElementById("detailStatus");
+        const detailDesc = document.getElementById("detailDesc");
+
+        let currentUser = null;
+        let toastTimer = null;
+        let selectedTrashIds = new Set();
+
+        function isAdmin() {
+            if (!currentUser) return false;
+            const email = currentUser.email ? currentUser.email.toLowerCase() : "";
+            const uid = currentUser.uid || "";
+            return ADMIN_UIDS.includes(uid) || ADMIN_EMAILS.includes(email);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem("animeverse_theme");
+            if (savedTheme === "light") {
+                document.body.classList.add("light");
+                themeBtn.innerText = "☀️";
+            } else {
+                document.body.classList.remove("light");
+                themeBtn.innerText = "🌙";
+            }
+        }
+
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle("light");
+            localStorage.setItem("animeverse_theme", isLight ? "light" : "dark");
+            themeBtn.innerText = isLight ? "☀️" : "🌙";
+        }
+
+        function goHome() {
+            window.location.href = "index.html";
+        }
+
+        function showToast(message, type = "") {
+            clearTimeout(toastTimer);
+            toast.innerText = message;
+            toast.className = "";
+            toast.classList.add("show");
+            if (type) toast.classList.add(type);
+            toastTimer = setTimeout(() => toast.classList.remove("show"), 3500);
+        }
+
+        function login() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: "select_account" });
+            auth.signInWithPopup(provider)
+                .then(() => showToast("Login realizado com sucesso!", "success"))
+                .catch(error => {
+                    console.error("Erro no login:", error);
+                    showToast(getFirebaseError(error), "error");
+                });
+        }
+
+        function logout() {
+            auth.signOut()
+                .then(() => {
+                    showToast("Você saiu da sua conta.", "success");
+                })
+                .catch(error => {
+                    console.error("Erro ao sair:", error);
+                    showToast(getFirebaseError(error), "error");
+                });
+        }
+
+        auth.onAuthStateChanged(user => {
+            currentUser = user || null;
+            updateHeader();
+            renderAdminPanel();
+        });
+
+        function updateHeader() {
+            if (currentUser) {
+                userInfo.innerText = currentUser.displayName || currentUser.email || "";
+                loginBtn.style.display = "none";
+                logoutBtn.style.display = "inline-flex";
+            } else {
+                userInfo.innerText = "";
+                loginBtn.style.display = "inline-flex";
+                logoutBtn.style.display = "none";
+            }
+        }
+
+        async function getUserDisplayName(userId) {
+            if (!userId) return "Usuário desconhecido";
+
+            try {
+                const userDoc = await db.collection("users").doc(userId).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data() || {};
+                    return userData.name || userData.displayName || userData.email || userId;
+                }
+            } catch (error) {
+                console.warn("Usuário não encontrado na coleção users:", error);
+            }
+
+            return userId;
+        }
+
+        function getStatusLabel(status) {
+            const map = {
+                pending: "⏳ Pendente de aprovação",
+                approved: "✅ Aprovado",
+                rejected: "🗑️ Na lixeira"
+            };
+            return map[status] || "⏳ Pendente de aprovação";
+        }
+
+        function syncTrashActions() {
+            const filterValue = statusFilter.value || "all";
+            const trashVisible = filterValue === "rejected";
+
+            clearTrashBtn.style.display = trashVisible ? "inline-flex" : "none";
+            deleteSelectedBtn.style.display = trashVisible ? "inline-flex" : "none";
+            deleteSelectedBtn.disabled = selectedTrashIds.size === 0;
+        }
+
+        function renderAdminPanel() {
+            if (!isAdmin()) {
+                adminList.innerHTML = `
+                    <div class="state">
+                        🚫 Acesso restrito. Faça login com uma conta administrativa para visualizar esta página.
+                    </div>
+                `;
+                return;
+            }
+
+            db.collection("animes")
+                .onSnapshot(async snapshot => {
+                    const items = snapshot.docs.map(doc => ({ id: doc.id, data: doc.data() }));
+
+                    const pending = items.filter(item => item.data.status === "pending");
+                    const approved = items.filter(item => item.data.status === "approved");
+                    const rejected = items.filter(item => item.data.status === "rejected");
+
+                    pendingCount.innerText = pending.length;
+                    approvedCount.innerText = approved.length;
+                    rejectedCount.innerText = rejected.length;
+
+                    const filterValue = statusFilter.value || "all";
+                    let filtered = items;
+
+                    if (filterValue !== "all") {
+                        filtered = items.filter(item => item.data.status === filterValue);
+                    }
+
+                    if (filtered.length === 0) {
+                        adminList.innerHTML = `
+                            <div class="state">
+                                ${filterValue === "all" ? "✅" : "📭"} Nenhuma postagem encontrada para este filtro.
+                            </div>
+                        `;
+                        syncTrashActions();
+                        return;
+                    }
+
+                    adminList.innerHTML = "";
+                    filtered.forEach(item => adminList.appendChild(createModerationCard(item)));
+                    syncTrashActions();
+                }, error => {
+                    console.error("Erro ao carregar pendências:", error);
+                    adminList.innerHTML = `
+                        <div class="state">
+                            ❌ Não foi possível carregar as postagens pendentes.
+                        </div>
+                    `;
+                    syncTrashActions();
+                });
+        }
+
+        function openDetailModal(item) {
+            detailTitle.innerText = item.data.title || "Sem título";
+            detailMeta.innerText = "Publicado por: " + (item.data.userId || "desconhecido") + " • Visibilidade: " + (item.data.visibility === "private" ? "Privado" : "Público");
+            detailStatus.innerText = getStatusLabel(item.data.status || "pending");
+            detailDesc.innerText = item.data.desc || "Sem descrição.";
+
+            getUserDisplayName(item.data.userId)
+                .then(name => {
+                    detailMeta.innerText = "Publicado por: " + name + " • Visibilidade: " + (item.data.visibility === "private" ? "Privado" : "Público");
+                })
+                .catch(() => {
+                    detailMeta.innerText = "Publicado por: " + (item.data.userId || "desconhecido") + " • Visibilidade: " + (item.data.visibility === "private" ? "Privado" : "Público");
+                });
+
+            detailModal.classList.add("show");
+        }
+
+        function closeDetailModal() {
+            detailModal.classList.remove("show");
+        }
+
+        function handleModalBackground(event) {
+            if (event.target === detailModal) {
+                closeDetailModal();
+            }
+        }
+
+        function createModerationCard(item) {
+            const card = document.createElement("div");
+            card.className = "card";
+
+            const isRejectedItem = (item.data.status || "pending") === "rejected";
+
+            if (isRejectedItem) {
+                const selectLabel = document.createElement("label");
+                selectLabel.className = "card-select";
+
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = selectedTrashIds.has(item.id);
+                checkbox.addEventListener("change", event => {
+                    if (event.target.checked) {
+                        selectedTrashIds.add(item.id);
+                    } else {
+                        selectedTrashIds.delete(item.id);
+                    }
+                    syncTrashActions();
+                });
+
+                const text = document.createElement("span");
+                text.innerText = "Selecionar";
+
+                selectLabel.appendChild(checkbox);
+                selectLabel.appendChild(text);
+                card.appendChild(selectLabel);
+            }
+
+            const image = document.createElement("img");
+            image.className = "anime-image";
+            image.src = item.data.img || "https://via.placeholder.com/400x550?text=Anime";
+            image.alt = item.data.title || "Anime pendente";
+            image.loading = "lazy";
+            image.onerror = function () {
+                this.onerror = null;
+                this.src = "https://via.placeholder.com/400x550?text=Anime";
+            };
+
+            const title = document.createElement("p");
+            title.className = "card-title";
+            title.innerText = item.data.title || "Sem título";
+
+            const desc = document.createElement("p");
+            desc.className = "card-desc";
+            desc.innerText = item.data.desc || "Sem descrição";
+
+            const status = document.createElement("small");
+            status.className = "visibility";
+            status.innerText = getStatusLabel(item.data.status || "pending");
+
+            const userName = document.createElement("small");
+            userName.className = "user-pill";
+            userName.innerText = "Postado por: carregando...";
+            getUserDisplayName(item.data.userId)
+                .then(name => {
+                    userName.innerText = "Postado por: " + name;
+                })
+                .catch(() => {
+                    userName.innerText = "Postado por: " + (item.data.userId || "desconhecido");
+                });
+
+            const actions = document.createElement("div");
+            actions.className = "actions";
+
+            const detailButton = document.createElement("button");
+            detailButton.className = "btn secondary detail-btn";
+            detailButton.type = "button";
+            detailButton.innerText = "Ver detalhes";
+            detailButton.addEventListener("click", () => openDetailModal(item));
+
+            const statusValue = item.data.status || "pending";
+            const isPending = statusValue === "pending";
+            const isRejectedStatus = statusValue === "rejected";
+
+            if (isPending) {
+                const approveBtn = document.createElement("button");
+                approveBtn.className = "btn success";
+                approveBtn.type = "button";
+                approveBtn.innerText = "Aprovar";
+                approveBtn.addEventListener("click", () => moderateAnime(item.id, "approved"));
+
+                const rejectBtn = document.createElement("button");
+                rejectBtn.className = "btn danger";
+                rejectBtn.type = "button";
+                rejectBtn.innerText = "Rejeitar";
+                rejectBtn.addEventListener("click", () => moderateAnime(item.id, "rejected"));
+
+                actions.appendChild(approveBtn);
+                actions.appendChild(rejectBtn);
+            }
+
+            if (isRejectedStatus) {
+                const restoreBtn = document.createElement("button");
+                restoreBtn.className = "btn secondary";
+                restoreBtn.type = "button";
+                restoreBtn.innerText = "Recuperar";
+                restoreBtn.addEventListener("click", () => restoreAnime(item.id));
+                actions.appendChild(restoreBtn);
+            }
+
+            actions.appendChild(detailButton);
+
+            card.appendChild(image);
+            card.appendChild(title);
+            card.appendChild(desc);
+            card.appendChild(status);
+            card.appendChild(userName);
+            card.appendChild(actions);
+
+            return card;
+        }
+
+        async function moderateAnime(id, newStatus) {
+            if (!isAdmin()) {
+                showToast("Acesso restrito ao administrador.", "error");
+                return;
+            }
+
+            try {
+                const animeRef = db.collection("animes").doc(id);
+                const animeSnap = await animeRef.get();
+                if (!animeSnap.exists) {
+                    showToast("Postagem não encontrada.", "error");
+                    return;
+                }
+
+                const animeData = animeSnap.data();
+                await animeRef.update({
+                    status: newStatus,
+                    moderatedBy: currentUser.uid,
+                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    visibility: newStatus === "approved" ? animeData.visibility : "private",
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                if (newStatus === "rejected") {
+                    selectedTrashIds.delete(id);
+                }
+
+                showToast(newStatus === "approved" ? "Postagem aprovada com sucesso!" : "Postagem enviada para a lixeira.", "success");
+            } catch (error) {
+                console.error("Erro ao moderar postagem:", error);
+                showToast(getFirebaseError(error), "error");
+            }
+        }
+
+        async function restoreAnime(id) {
+            if (!isAdmin()) {
+                showToast("Acesso restrito ao administrador.", "error");
+                return;
+            }
+
+            try {
+                const animeRef = db.collection("animes").doc(id);
+                const animeSnap = await animeRef.get();
+
+                if (!animeSnap.exists) {
+                    showToast("Postagem não encontrada.", "error");
+                    return;
+                }
+
+                selectedTrashIds.delete(id);
+
+                await animeRef.update({
+                    status: "pending",
+                    visibility: "public",
+                    moderatedBy: currentUser.uid,
+                    moderatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                showToast("Postagem recuperada e enviada para revisão.", "success");
+            } catch (error) {
+                console.error("Erro ao recuperar postagem:", error);
+                showToast(getFirebaseError(error), "error");
+            }
+        }
+
+        async function deleteSelectedFromTrash() {
+            if (!isAdmin()) {
+                showToast("Acesso restrito ao administrador.", "error");
+                return;
+            }
+
+            if (selectedTrashIds.size === 0) {
+                showToast("Selecione pelo menos um item da lixeira.", "error");
+                return;
+            }
+
+            const confirmed = confirm("Tem certeza que deseja excluir permanentemente os itens selecionados?");
+            if (!confirmed) return;
+
+            try {
+                const ids = [...selectedTrashIds];
+                await Promise.all(ids.map(id => db.collection("animes").doc(id).delete()));
+                selectedTrashIds.clear();
+                syncTrashActions();
+                showToast("Itens da lixeira excluídos permanentemente.", "success");
+            } catch (error) {
+                console.error("Erro ao excluir itens da lixeira:", error);
+                showToast(getFirebaseError(error), "error");
+            }
+        }
+
+        async function clearTrash() {
+            if (!isAdmin()) {
+                showToast("Acesso restrito ao administrador.", "error");
+                return;
+            }
+
+            try {
+                const rejectedItems = await db.collection("animes").where("status", "==", "rejected").get();
+
+                if (rejectedItems.empty) {
+                    showToast("A lixeira já está vazia.", "success");
+                    return;
+                }
+
+                const confirmed = confirm(`Deseja excluir permanentemente ${rejectedItems.size} item(ns) da lixeira?`);
+                if (!confirmed) return;
+
+                await Promise.all(rejectedItems.docs.map(doc => doc.ref.delete()));
+                selectedTrashIds.clear();
+                syncTrashActions();
+                showToast("Lixeira esvaziada com sucesso.", "success");
+            } catch (error) {
+                console.error("Erro ao esvaziar lixeira:", error);
+                showToast(getFirebaseError(error), "error");
+            }
+        }
+
+        function getFirebaseError(error) {
+            if (!error) return "Ocorreu um erro inesperado.";
+            const code = error.code || "";
+            const messages = {
+                "auth/popup-closed-by-user": "A janela de login foi fechada.",
+                "auth/popup-blocked": "O navegador bloqueou a janela de login. Permita pop-ups para este site.",
+                "auth/cancelled-popup-request": "Outra janela de login já está aberta.",
+                "auth/network-request-failed": "Erro de conexão. Verifique sua internet.",
+                "permission-denied": "Permissão negada pelo Firebase.",
+                "failed-precondition": "O Firebase informou que uma condição necessária não foi atendida.",
+                "unavailable": "O serviço do Firebase está temporariamente indisponível.",
+                "unauthenticated": "Faça login para realizar esta ação."
+            };
+            if (messages[code]) return messages[code];
+            if (error.message) return error.message;
+            return "Ocorreu um erro inesperado.";
+        }
+
+        statusFilter.addEventListener("change", () => {
+            if (isAdmin()) {
+                syncTrashActions();
+                renderAdminPanel();
+            }
+        });
+
+        deleteSelectedBtn.addEventListener("click", deleteSelectedFromTrash);
+        clearTrashBtn.addEventListener("click", clearTrash);
+
+        document.addEventListener("keydown", event => {
+            if (event.key === "Escape") {
+                closeDetailModal();
+            }
+        });
+
+        loadTheme();
+        updateHeader();
+    </script>
+</body>
+
+</html>
